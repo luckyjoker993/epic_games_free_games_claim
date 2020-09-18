@@ -13,4 +13,7 @@ Python script to claim free games on epic games store
 
 5.don't delete new created folder 'selenium' this folder stores session info so you don't need to login again.
 
-5.run python epic_games.py to claim free games to your account #add this script to schedulers.
+6.run python epic_games.py to claim free games to your account #add this script to schedulers.
+
+7. .bat file example with oneline command:
+C:\Users\lucky\PycharmProjects\selenium\venv\Scripts\python.exe C:\Users\lucky\PycharmProjects\selenium\epic_games.py

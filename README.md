@@ -2,6 +2,7 @@
 Python script to claim free games on epic games store
 
 # tested on windows 10 pc with chrome
+# this script needs python installed on your pc
 
 1.copy files to same directory.
 
@@ -20,4 +21,4 @@ Python script to claim free games on epic games store
 C:\Users\lucky\PycharmProjects\selenium\venv\Scripts\python.exe C:\Users\lucky\PycharmProjects\selenium\epic_games.py
 
 
-donations: https://donate.stream/ya410012969446716
+#donations: https://donate.stream/ya410012969446716

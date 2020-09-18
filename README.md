@@ -16,4 +16,5 @@ Python script to claim free games on epic games store
 6.run python epic_games.py to claim free games to your account #add this script to schedulers.
 
 7. .bat file example with oneline command:
-  C:\Users\lucky\PycharmProjects\selenium\venv\Scripts\python.exe C:\Users\lucky\PycharmProjects\selenium\epic_games.py
+
+C:\Users\lucky\PycharmProjects\selenium\venv\Scripts\python.exe C:\Users\lucky\PycharmProjects\selenium\epic_games.py

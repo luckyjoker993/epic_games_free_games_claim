@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 try:
-    from .settings import number_of_browsers as workers, save_cookies, hide_browsers
+    from settings import number_of_browsers as workers, save_cookies, hide_browsers
 except Exception:
     workers = 1
     save_cookies = False

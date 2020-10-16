@@ -6,7 +6,7 @@ from time import sleep
 from concurrent.futures import ThreadPoolExecutor as Threads
 
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException, InvalidSessionIdException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 try:
     from settings import number_of_browsers as workers, save_cookies, hide_browsers
 except Exception:
+    print('No setting.py file detected, continuing with default settings.')
     workers = 1
     save_cookies = False
     hide_browsers = True
@@ -139,7 +140,7 @@ def add_games(user, links):
         if not get_buttons:
             if not repeating:
                 print(f'{login}: {root.title} already in library')
-            root.close()
+            root.execute_script('window.close()')
             root.switch_to.window(root.window_handles[0])
             continue
 
@@ -151,40 +152,60 @@ def add_games(user, links):
         if success:
             if not repeating:
                 print(f'{login}: {root.title} added to library')
-            root.close()
+            root.execute_script('window.close()')
             root.switch_to.window(root.window_handles[0])
 
     # close the user profile page
     root.switch_to.window(root.window_handles[0])
     root.close()
     try:
+        if root.window_handles:
+            if hide_browsers:
+                root.set_window_position(0, 0)
         while root.window_handles:
             sleep(15)
-    except InvalidSessionIdException:
+    except:
         pass
+
+    return
 
 
 # function to handle confirming order
 def place_order(root, login):
-    try:
-        WebDriverWait(root, 15).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'btn-primary')))
-        root.execute_script("document.getElementsByClassName('btn-primary')[0].click()")
-        WebDriverWait(root, 15).until(
-            EC.presence_of_element_located((By.XPATH, confirm_button_xpath)))
-        root.execute_script(
-            "document.getElementsByClassName('overlay-modal-content')[0]\n"
-            ".getElementsByClassName('btn-primary')[0].click()")
-        sleep(15)
-        if '/verify?' in root.current_url:
-            print(f'{login}: {root.title} needs to verify')
-            if hide_browsers:
-                root.set_window_position(0, 0)
-            return False
-        return True
-    except TimeoutException:
-        print(f'{login}: something went wrong with {root.title}')
+    tries = 3
+    while tries:
+        try:
+            WebDriverWait(root, 15).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'btn-primary')))
+            root.execute_script("document.getElementsByClassName('btn-primary')[0].click()")
+            break
+        except:
+            tries -= 1
+            if not tries:
+                print(f'{login}: something went wrong with {root.title}')
+                return False
+    tries = 3
+    while tries:
+        try:
+            WebDriverWait(root, 15).until(
+                EC.presence_of_element_located((By.XPATH, confirm_button_xpath)))
+            root.execute_script(
+                "document.getElementsByClassName('overlay-modal-content')[0]\n"
+                ".getElementsByClassName('btn-primary')[0].click()")
+            break
+        except:
+            tries -= 1
+            if not tries:
+                print(f'{login}: something went wrong with {root.title}')
+                return False
+
+    sleep(15)
+    if '/verify?' in root.current_url:
+        print(f'{login}: {root.title} needs to verify')
+        if hide_browsers:
+            root.set_window_position(0, 0)
         return False
+    return True
 
 
 def main():

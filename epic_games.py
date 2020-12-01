@@ -1,3 +1,4 @@
+import pickle
 import sys
 import os
 import traceback
@@ -18,8 +19,10 @@ try:
 except Exception:
     print('No setting.py file detected, continuing with default settings.')
     workers = 1
-    save_cookies = False
+    save_cookies = 1
     hide_browsers = True
+
+debug = 0
 
 chrome_path = "./chromedriver.exe"
 try:
@@ -99,14 +102,23 @@ def get_links():
 def add_games(user, links):
     login, password = user
     options = Options()
-    if save_cookies:
-        options.add_argument(f'--user-data-dir={login}')
     if hide_browsers:
         options.add_argument('--window-position=-2000,0')
+
     root = webdriver.Chrome(executable_path=path, options=options)
 
+    # Load cookies
+    try:
+        with open(f'{user[0]}.pkl', 'rb') as file:
+            cookies = pickle.load(file)
+            root.get('https://www.epicgames.com/id/login')
+            for cookie in cookies:
+                root.add_cookie(cookie)
+    except FileNotFoundError:
+        print(f'{user[0]}:No cookies found')
+        root.get('https://www.epicgames.com/id/login')
+
     # check if logged in
-    root.get('https://www.epicgames.com/id/login')
     sleep(3)
     if root.current_url != 'https://www.epicgames.com/account/personal':
         root.get('https://www.epicgames.com/id/login/epic')
@@ -123,13 +135,20 @@ def add_games(user, links):
             sleep(2)
         if hide_browsers:
             root.set_window_position(-2000, 0)
-    # accept cookies
-    try:
-        cookies_button = WebDriverWait(root, 5).until(
-            EC.presence_of_element_located((By.ID, 'onetrust-accept-btn-handler')))
-        root.execute_script('arguments[0].click()', cookies_button)
-    except TimeoutException:
-        pass
+
+    # save cookies
+    if save_cookies:
+        with open(f'{user[0]}.pkl', 'wb') as cookies:
+            pickle.dump(root.get_cookies(), cookies)
+            print('saved cookies')
+
+    # # accept cookies
+    # try:
+    #     cookies_button = WebDriverWait(root, 5).until(
+    #         EC.presence_of_element_located((By.ID, 'onetrust-accept-btn-handler')))
+    #     root.execute_script('arguments[0].click()', cookies_button)
+    # except TimeoutException:
+    #     pass
 
     # loop through links
     for link, repeating in links:
@@ -243,8 +262,11 @@ def place_order(root, login):
 
 def main():
     links = get_links()
-    with Threads(max_workers=workers) as executor:
-        executor.map(add_games, users(), repeat(links))
+    if debug:
+        add_games(users()[0], links)
+    else:
+        with Threads(max_workers=workers) as executor:
+            executor.map(add_games, users(), repeat(links))
 
 
 if __name__ == "__main__":

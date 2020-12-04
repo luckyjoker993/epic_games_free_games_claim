@@ -1,6 +1,4 @@
 import pickle
-import sys
-import os
 import traceback
 
 from itertools import repeat
@@ -14,32 +12,25 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+from decorators import traceback_decorator
+
 try:
     from epic_games_settings import number_of_browsers as workers, save_cookies, hide_browsers
 except Exception:
-    print('No setting.py file detected, continuing with default settings.')
+    print('No epic_games_setting.py file detected, continuing with default settings.')
     workers = 1
     save_cookies = 1
     hide_browsers = True
 
+from local_paths import local_path
+from heroku_paths import heroku_path, chrome_binary_heroku_path
+
+path = heroku_path or local_path
+
 debug = 0
 
-chrome_path = "./chromedriver.exe"
-try:
-    path = os.path.join(sys._MEIPASS, chrome_path)
-except Exception:
-    path = chrome_path
 
-div_discover_xpath = '//*[@id="dieselReactWrapper"]/div/div[4]/main/div/div/div/div/div[2]/div[2]/div/div/section/div/*'
-text_button_xpath = './/div/div/a/div/div/div[1]/div[2]/div/div/span'
-link_xpath = './/div/div/a'
-name_xpath = './/div/div/a/div/div/div[3]/span[1]'
-
-overlay_xpath = '//*[@id="dieselReactWrapper"]/div/div[4]/main/div[2]/div/div[2]/div/button'
-get_button_xpath = '/html/body/div[1]/div/div[4]/main/div/div/div[2]/div/div[2]/div[2]/div/div/div[3]/div/div/div/div[3]/div/div/button'
-confirm_button_xpath = '//*[@id="purchase-app"]/div/div[4]/div[1]/div[2]/div[6]/div[2]/div/div[2]/button[2]'
-
-
+@traceback_decorator
 def users():
     users = []
     with open('login.txt', 'r') as file:
@@ -52,32 +43,16 @@ def users():
     return users
 
 
-# def get_links():
-#     options = Options()
-#     if hide_browsers:
-#         options.add_argument('--window-position=-2000,0')
-#     root = webdriver.Chrome(executable_path=path, options=options)
-#     root.get('https://www.epicgames.com/store/en-US/free-games')
-#     WebDriverWait(root, 60).until(lambda wd: len(wd.find_elements_by_xpath(div_discover_xpath)) != 0)
-#     games = root.find_elements_by_xpath(div_discover_xpath)
-#     links = []
-#     # get links of free games
-#     for game in games:
-#         button = game.find_element_by_xpath(text_button_xpath)
-#         if button.text.upper() == 'FREE NOW':
-#             name = game.find_element_by_xpath(name_xpath).text
-#             print(f'{name} is free now')
-#             link = game.find_element_by_xpath(link_xpath)
-#             link = link.get_attribute('href')
-#             links.append((link, 0))
-#     root.close()
-#     return links
-
-
+@traceback_decorator
 def get_links():
     options = Options()
+    if chrome_binary_heroku_path:
+        options.binary_location = chrome_binary_heroku_path
+
     if hide_browsers:
         options.add_argument('--window-position=-2000,0')
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
     root = webdriver.Chrome(executable_path=path, options=options)
     root.get('https://www.epicgames.com/store/en-US/free-games')
     sleep(3)
@@ -99,28 +74,34 @@ def get_links():
     return links
 
 
+@traceback_decorator
 def add_games(user, links):
     login, password = user
     options = Options()
+    if chrome_binary_heroku_path:
+        options.binary_location = chrome_binary_heroku_path
     if hide_browsers:
         options.add_argument('--window-position=-2000,0')
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
 
     root = webdriver.Chrome(executable_path=path, options=options)
 
     # Load cookies
     try:
-        with open(f'{user[0]}.pkl', 'rb') as file:
+        with open(f'{login}.pkl', 'rb') as file:
             cookies = pickle.load(file)
             root.get('https://www.epicgames.com/id/login')
             for cookie in cookies:
                 root.add_cookie(cookie)
+            root.refresh()
     except FileNotFoundError:
-        print(f'{user[0]}:No cookies found')
+        print(f'{login}:No cookies found')
         root.get('https://www.epicgames.com/id/login')
 
     # check if logged in
     sleep(3)
-    if root.current_url != 'https://www.epicgames.com/account/personal':
+    if root.current_url == 'https://www.epicgames.com/id/login':
         root.get('https://www.epicgames.com/id/login/epic')
         try:
             WebDriverWait(root, 15).until(EC.presence_of_element_located((By.ID, 'email'))).send_keys(login)
@@ -138,24 +119,16 @@ def add_games(user, links):
 
     # save cookies
     if save_cookies:
-        with open(f'{user[0]}.pkl', 'wb') as cookies:
+        with open(f'{login}.pkl', 'wb') as cookies:
             pickle.dump(root.get_cookies(), cookies)
-            print('saved cookies')
-
-    # # accept cookies
-    # try:
-    #     cookies_button = WebDriverWait(root, 5).until(
-    #         EC.presence_of_element_located((By.ID, 'onetrust-accept-btn-handler')))
-    #     root.execute_script('arguments[0].click()', cookies_button)
-    # except TimeoutException:
-    #     pass
+            print(f'{login}: saved cookies')
 
     # loop through links
     for link, repeating in links:
         before = len(root.window_handles)
         root.execute_script('window.open()')
         while before == len(root.window_handles):
-            pass
+            sleep(0.1)
         root.switch_to.window(root.window_handles[-1])
         root.get(link)
         main_div = root.find_elements_by_xpath('//main/*')
@@ -221,6 +194,7 @@ def add_games(user, links):
 
 
 # function to handle confirming order
+@traceback_decorator
 def place_order(root, login):
     tries = 5
     while tries:
@@ -236,21 +210,6 @@ def place_order(root, login):
                 return False
             sleep(5)
 
-    # Confirm place order # removed
-    # tries = 3
-    # while tries:
-    #     try:
-    #         root.execute_script(
-    #             "document.getElementsByClassName('overlay-modal-content')[0]\n"
-    #             ".getElementsByClassName('btn-primary')[0].click()")
-    #         break
-    #     except:
-    #         tries -= 1
-    #         if not tries:
-    #             traceback.print_exc()
-    #             print(f'{login}: something went wrong with {root.title}')
-    #             return False
-
     sleep(15)
     if '/verify?' in root.current_url:
         print(f'{login}: {root.title} needs to verify')
@@ -260,6 +219,7 @@ def place_order(root, login):
     return True
 
 
+@traceback_decorator
 def main():
     links = get_links()
     if debug:
@@ -271,3 +231,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

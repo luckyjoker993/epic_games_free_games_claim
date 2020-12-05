@@ -94,15 +94,17 @@ def add_games(user, links):
             root.get('https://www.epicgames.com/id/login')
             for cookie in cookies:
                 root.add_cookie(cookie)
+            print(f"{login}: Cookies loaded")
             root.refresh()
     except FileNotFoundError:
-        print(f'{login}:No cookies found')
+        print(f'{login}: No cookies found')
         root.get('https://www.epicgames.com/id/login')
 
     # check if logged in
     sleep(3)
     if root.current_url == 'https://www.epicgames.com/id/login':
         root.get('https://www.epicgames.com/id/login/epic')
+        print(f'{login}: Need to login')
         try:
             WebDriverWait(root, 15).until(EC.presence_of_element_located((By.ID, 'email'))).send_keys(login)
             root.find_element_by_id('password').send_keys(password)
@@ -110,7 +112,7 @@ def add_games(user, links):
             if hide_browsers:
                 root.set_window_position(0, 0)
         except TimeoutException:
-            print(f'{login}: failed to login')
+            print(f'{login}: Failed to login')
             return False
         while not root.current_url.startswith('https://www.epicgames.com/account/personal'):
             sleep(2)
@@ -121,7 +123,7 @@ def add_games(user, links):
     if save_cookies:
         with open(f'{login}.pkl', 'wb') as cookies:
             pickle.dump(root.get_cookies(), cookies)
-            print(f'{login}: saved cookies')
+            print(f'{login}: Cookies saved')
 
     # loop through links
     for link, repeating in links:
@@ -206,7 +208,7 @@ def place_order(root, login):
             tries -= 1
             if not tries:
                 traceback.print_exc()
-                print(f'{login}: something went wrong with {root.title}')
+                print(f'{login}: Something went wrong with {root.title}')
                 return False
             sleep(5)
 

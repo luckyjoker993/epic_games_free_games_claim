@@ -5,6 +5,7 @@ from itertools import repeat
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor as Threads
 
+from dropbox.exceptions import ApiError
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -22,8 +23,10 @@ except Exception:
     save_cookies = 1
     hide_browsers = True
 
+from download_upload import download, upload
+
 from local_paths import local_path
-from heroku_paths import heroku_path, chrome_binary_heroku_path
+from heroku_paths import heroku_path, chrome_binary_heroku_path, drop_box_token
 
 path = heroku_path or local_path
 
@@ -33,18 +36,37 @@ debug = 0
 @traceback_decorator
 def users():
     users = []
-    with open('login.txt', 'r') as file:
-        while True:
-            login = file.readline().strip()
-            if not login:
-                break
-            password = file.readline().strip()
+    if drop_box_token:
+        print('Downloading login.txt from Dropbox')
+        file_bytes = download(drop_box_token, 'login.txt')
+        login_password_list = file_bytes.decode().split()
+        if len(login_password_list) % 2 != 0:
+            print('There should be same number of logins and password')
+            raise IndexError
+        while len(login_password_list):
+            password = login_password_list.pop()
+            login = login_password_list.pop()
             users.append((login, password))
-    return users
+        return users
+    else:
+        print('Reading local login.txt file')
+        try:
+            with open('login.txt', 'r') as file:
+                while True:
+                    login = file.readline().strip()
+                    if not login:
+                        break
+                    password = file.readline().strip()
+                    users.append((login, password))
+            return users
+        except FileNotFoundError:
+            print('login.txt file should be in same directory')
+            raise
 
 
 @traceback_decorator
 def get_links():
+    print('Getting links of free games')
     options = Options()
     if chrome_binary_heroku_path:
         options.binary_location = chrome_binary_heroku_path
@@ -71,6 +93,7 @@ def get_links():
         return links;
         ''')), repeat(0))
     root.close()
+    print('Got links')
     return links
 
 
@@ -88,23 +111,48 @@ def add_games(user, links):
     root = webdriver.Chrome(executable_path=path, options=options)
 
     # Load cookies
-    try:
-        with open(f'{login}.json', 'r') as file:
-            cookies = json.load(file)
+    if drop_box_token:
+        # load dropbox cookies
+        try:
             root.get('https://www.epicgames.com/id/login')
+            print(f'{login}: Getting cookies from dropbox')
+            cookies_bytes = download(drop_box_token, f'{login}.json')
+            cookies = json.loads(cookies_bytes)
             for cookie in cookies:
+                try:
+                    cookie['expiry'] += 600  # extend cookie
+                except KeyError:
+                    pass
                 root.add_cookie(cookie)
-            print(f"{login}: Cookies loaded")
+            print(f'{login}: Cookies loaded from dropbox')
             root.refresh()
-    except FileNotFoundError:
-        print(f'{login}: No cookies found')
-        root.get('https://www.epicgames.com/id/login')
+        except ApiError as e:
+            print(f'{login}: {e}')
+    else:
+        # Load local cookies
+        try:
+            root.get('https://www.epicgames.com/id/login')
+            print(f'{login}: Getting cookies from local')
+            with open(f'{login}.json', 'r') as file:
+                cookies = json.load(file)
+                for cookie in cookies:
+                    try:
+                        cookie['expiry'] += 600  # extend cookie
+                    except KeyError:
+                        pass
+                    root.add_cookie(cookie)
+                print(f'{login}: Cookies loaded')
+                root.refresh()
+        except FileNotFoundError:
+            print(f'{login}: No cookies found')
 
     # check if logged in
     sleep(3)
     if root.current_url == 'https://www.epicgames.com/id/login':
         root.get('https://www.epicgames.com/id/login/epic')
         print(f'{login}: Need to login')
+        if hide_browsers:
+            return False
         try:
             WebDriverWait(root, 15).until(EC.presence_of_element_located((By.ID, 'email'))).send_keys(login)
             root.find_element_by_id('password').send_keys(password)
@@ -116,14 +164,20 @@ def add_games(user, links):
             return False
         while not root.current_url.startswith('https://www.epicgames.com/account/personal'):
             sleep(2)
-        if hide_browsers:
-            root.set_window_position(-2000, 0)
-
+    else:
+        print(f'{login}: already logged in')
     # save cookies
     if save_cookies:
-        with open(f'{login}.json', 'w') as cookies:
-            json.dump(root.get_cookies(), cookies)
-            print(f'{login}: Cookies saved')
+        if drop_box_token:
+            # upload cookies to dropbox
+            cookies = json.dumps(root.get_cookies())
+            upload(drop_box_token, f'{login}.json', bytes(cookies, encoding='utf-8'))
+            print(f'{login}: Cookies uploaded to dropbox')
+        else:
+            # Save cookies localy
+            with open(f'{user[0]}.json', 'w') as cookies:
+                json.dump(root.get_cookies(), cookies)
+                print(f'{login}: Cookies saved')
 
     # loop through links
     for link, repeating in links:

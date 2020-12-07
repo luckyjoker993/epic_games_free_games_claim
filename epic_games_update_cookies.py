@@ -74,7 +74,7 @@ def epic_games_login(user):
         if save_cookies:
             with open(f'{user[0]}.json', 'w') as cookies:
                 json.dump(root.get_cookies(), cookies)
-                print(f'{login}: saved cookies')
+                print(f'{login}: Cookies saved')
     finally:
         root.close()
 

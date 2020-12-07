@@ -1,4 +1,4 @@
-import pickle
+import json
 import traceback
 
 from itertools import repeat
@@ -89,8 +89,8 @@ def add_games(user, links):
 
     # Load cookies
     try:
-        with open(f'{login}.pkl', 'rb') as file:
-            cookies = pickle.load(file)
+        with open(f'{login}.json', 'r') as file:
+            cookies = json.load(file)
             root.get('https://www.epicgames.com/id/login')
             for cookie in cookies:
                 root.add_cookie(cookie)
@@ -121,8 +121,8 @@ def add_games(user, links):
 
     # save cookies
     if save_cookies:
-        with open(f'{login}.pkl', 'wb') as cookies:
-            pickle.dump(root.get_cookies(), cookies)
+        with open(f'{login}.json', 'w') as cookies:
+            json.dump(root.get_cookies(), cookies)
             print(f'{login}: Cookies saved')
 
     # loop through links

@@ -1,4 +1,4 @@
-import pickle
+import json
 import traceback
 from time import sleep
 
@@ -47,11 +47,16 @@ def epic_games_login(user):
 
         # Load cookies
         try:
-            with open(f'{login}.pkl', 'rb') as file:
-                cookies = pickle.load(file)
+            with open(f'{login}.json', 'r') as file:
+                cookies = json.load(file)
                 root.get('https://www.epicgames.com/id/login')
                 for cookie in cookies:
+                    try:
+                        cookie['expiry'] += 600  # extend cookie
+                    except KeyError:
+                        pass
                     root.add_cookie(cookie)
+                print(f'{login}: Cookies loaded')
                 root.refresh()
         except FileNotFoundError:
             print(f'{login}:No cookies found')
@@ -67,8 +72,8 @@ def epic_games_login(user):
 
         # save cookies
         if save_cookies:
-            with open(f'{user[0]}.pkl', 'wb') as cookies:
-                pickle.dump(root.get_cookies(), cookies)
+            with open(f'{user[0]}.json', 'w') as cookies:
+                json.dump(root.get_cookies(), cookies)
                 print(f'{login}: saved cookies')
     finally:
         root.close()
@@ -80,4 +85,4 @@ if __name__ == '__main__':
             epic_games_login(user)
     except:
         traceback.print_exc()
-        input('Press any key to continue')
+        # input('Press any key to continue')

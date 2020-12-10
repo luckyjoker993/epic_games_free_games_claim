@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import traceback
 from time import sleep, time
@@ -108,7 +109,7 @@ def epic_games_login(user):
         else:
             print(f'{login}: already logged in')
         if time_to_keep_alive:
-            seconds = time_to_keep_alive
+            seconds = int(time_to_keep_alive)
             root.get('https://www.epicgames.com/store/en-US/')
             links = [link.get_attribute('href') for link in root.find_elements_by_tag_name('a')]
             links_games = [link for link in links if link and link.startswith('https://www.epicgames.com/store/en-US/product')]
@@ -119,6 +120,9 @@ def epic_games_login(user):
                 sleep(10)
                 seconds -= int(time() - start)
                 print(f"{login}: {seconds} left to exit")
+                if os.getenv('EXIT'):
+                    print(f"{login}: exiting")
+                    break
 
         # save cookies
         if save_cookies:

@@ -1,6 +1,7 @@
 import json
+import random
 import traceback
-from time import sleep
+from time import sleep, time
 
 from dropbox.exceptions import ApiError
 from selenium import webdriver
@@ -15,7 +16,7 @@ except ModuleNotFoundError:
 from download_upload import download, upload
 
 from local_paths import local_path
-from heroku_paths import heroku_path, chrome_binary_heroku_path, drop_box_token
+from heroku_paths import heroku_path, chrome_binary_heroku_path, drop_box_token, time_to_keep_alive
 
 path = heroku_path or local_path
 
@@ -106,6 +107,18 @@ def epic_games_login(user):
             return
         else:
             print(f'{login}: already logged in')
+        if time_to_keep_alive:
+            seconds = time_to_keep_alive
+            root.get('https://www.epicgames.com/store/en-US/')
+            links = [link.get_attribute('href') for link in root.find_elements_by_tag_name('a')]
+            links_games = [link for link in links if link and link.startswith('https://www.epicgames.com/store/en-US/product')]
+            while seconds > 0:
+                start = time()
+                link = random.choice(links_games)
+                root.get(link)
+                sleep(10)
+                seconds -= int(time() - start)
+                print(f"{login}: {seconds} left to exit")
 
         # save cookies
         if save_cookies:
@@ -119,6 +132,8 @@ def epic_games_login(user):
                 with open(f'{user[0]}.json', 'w') as cookies:
                     json.dump(root.get_cookies(), cookies)
                     print(f'{login}: Cookies saved')
+
+
     finally:
         root.close()
 

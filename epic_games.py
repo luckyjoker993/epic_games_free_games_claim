@@ -21,7 +21,7 @@ except Exception:
     print('No epic_games_setting.py file detected, continuing with default settings.')
     workers = 1
     save_cookies = 1
-    hide_browsers = True
+    hide_browsers = 0
 
 from download_upload import download, upload
 

@@ -1,6 +1,8 @@
 # epic_games_free_games_claim
 Python script to claim free games on epic games store
 
+# deploy to heroku
+For this script to function on heroku you will need to provoide access token, put at root login.txt and cookies file in format "your_email@host.com.json"
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 # tested on windows 10 pc with chrome

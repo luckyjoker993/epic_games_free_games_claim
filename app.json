@@ -1,0 +1,37 @@
+{
+  "name": "Epic Games Claimer",
+  "description": "A script to auto add free games from EpicGames store",
+  "repository": "https://github.com/luckyjoker993/epic_games_free_games_claim",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    },
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-google-chrome"
+    },
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-chromedriver"
+    }
+  ],
+  "addons": [
+    "Heroku Scheduler"
+  ],
+  "env": {
+    "CHROME_WEBDRIVER_PATH": {
+      "description": "Path to chromedriver.exe.",
+      "value": "/app/.chromedriver/bin/chromedriver"
+    },
+    "DROP_BOX_TOKEN": {
+      "description": "A secret token to access your dropbox account from heroku. 'don't share with anyone'",
+      "value": ""
+    },
+    "KEEP_ALIVE_SECONDS": {
+      "description": "Amount of seconds to keep browsing session alive in epic_games_update_cookies.py",
+      "value": "500"
+    },
+    "EXIT": {
+      "description": "Set this value to exit the loop in epic_games_update_cookies.py",
+      "value": ""
+    }
+  }
+}

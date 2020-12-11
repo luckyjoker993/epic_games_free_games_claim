@@ -61,7 +61,9 @@ def epic_games_login(user):
         if hide_browsers:
             options.add_argument('--headless')
             options.add_argument('--disable-gpu')
+            options.add_argument('--no-sandbox')
             options.add_argument('--window-position=-2000,0')
+            options.add_argument('--disable-dev-shm-usage')
 
         root = webdriver.Chrome(executable_path=path, options=options)
 

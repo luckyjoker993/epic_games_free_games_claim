@@ -1,2 +1,3 @@
-selenium
-dropbox
+dropbox==11.0.0
+selenium==3.141.0
+

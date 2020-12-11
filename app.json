@@ -4,7 +4,7 @@
   "repository": "https://github.com/luckyjoker993/epic_games_free_games_claim",
   "buildpacks": [
     {
-      "url": "heroku/python"
+      "url": "heroku/python-3.9"
     },
     {
       "url": "https://github.com/heroku/heroku-buildpack-google-chrome"
@@ -28,11 +28,6 @@
     "KEEP_ALIVE_SECONDS": {
       "description": "Amount of seconds to keep browsing session alive in epic_games_update_cookies.py",
       "value": "500"
-    },
-    "EXIT": {
-      "description": "Set this value to exit the loop in epic_games_update_cookies.py",
-      "value": "",
-      "required": false
     }
   }
 }

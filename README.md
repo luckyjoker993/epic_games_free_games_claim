@@ -1,6 +1,8 @@
 # epic_games_free_games_claim
 Python script to claim free games on epic games store
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 # tested on windows 10 pc with chrome
 1. open login.txt and replace with your login and password.
 2. if you have more than one account you can change number of browsers in settings.py

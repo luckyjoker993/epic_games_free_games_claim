@@ -4,7 +4,7 @@
   "repository": "https://github.com/luckyjoker993/epic_games_free_games_claim",
   "buildpacks": [
     {
-      "url": "heroku/python-3.9"
+      "url": "heroku/python-3.9.0"
     },
     {
       "url": "https://github.com/heroku/heroku-buildpack-google-chrome"

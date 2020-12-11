@@ -64,6 +64,11 @@ def epic_games_login(user):
             options.add_argument('--no-sandbox')
             options.add_argument('--window-position=-2000,0')
             options.add_argument('--disable-dev-shm-usage')
+            # disable media
+            chrome_prefs = {}
+            options.experimental_options["prefs"] = chrome_prefs
+            chrome_prefs["profile.default_content_settings"] = {"images": 2}
+            chrome_prefs["profile.managed_default_content_settings"] = {"images": 2}
 
         root = webdriver.Chrome(executable_path=path, options=options)
 

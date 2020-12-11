@@ -22,7 +22,7 @@
       "value": "/app/.chromedriver/bin/chromedriver"
     },
     "DROP_BOX_TOKEN": {
-      "description": "A secret token to access your dropbox account from heroku. 'don't share with anyone'",
+      "description": "A secret token to access your dropbox account from heroku. 'don't share with anyone' (https://www.dropbox.com/developers/apps/create)",
       "value": ""
     },
     "KEEP_ALIVE_SECONDS": {
@@ -31,7 +31,8 @@
     },
     "EXIT": {
       "description": "Set this value to exit the loop in epic_games_update_cookies.py",
-      "value": ""
+      "value": "",
+      "required": "false"
     }
   }
 }

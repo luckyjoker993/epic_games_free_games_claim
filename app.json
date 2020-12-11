@@ -32,7 +32,7 @@
     "EXIT": {
       "description": "Set this value to exit the loop in epic_games_update_cookies.py",
       "value": "",
-      "required": "false"
+      "required": false
     }
   }
 }

@@ -79,6 +79,7 @@ def epic_games_login(user):
                     except KeyError:
                         pass
                     root.add_cookie(cookie)
+                del cookies
                 print(f'{login}: Cookies loaded from dropbox')
                 root.refresh()
             except ApiError as e:
@@ -96,6 +97,7 @@ def epic_games_login(user):
                         except KeyError:
                             pass
                         root.add_cookie(cookie)
+                    del cookies
                     print(f'{login}: Cookies loaded')
                     root.refresh()
             except FileNotFoundError:
@@ -109,20 +111,27 @@ def epic_games_login(user):
         else:
             print(f'{login}: already logged in')
         if time_to_keep_alive:
-            seconds = int(time_to_keep_alive)
-            root.get('https://www.epicgames.com/store/en-US/')
-            links = [link.get_attribute('href') for link in root.find_elements_by_tag_name('a')]
-            links_games = [link for link in links if link and link.startswith('https://www.epicgames.com/store/en-US/product')]
-            while seconds > 0:
-                start = time()
-                link = random.choice(links_games)
-                root.get(link)
-                sleep(10)
-                seconds -= int(time() - start)
-                print(f"{login}: {seconds} left to exit")
-                if os.getenv('EXIT'):
-                    print(f"{login}: exiting")
-                    break
+            try:
+                root.get('https://www.epicgames.com/store/en-US/')
+                seconds = int(time_to_keep_alive)
+                print(f"{login}: looping links for {seconds} seconds")
+                while seconds > 0:
+                    start = time()
+                    links = []
+                    for link in root.find_elements_by_tag_name('a'):
+                        if href := link.get_attribute('href'):
+                            if href.startswith('https://www.epicgames.com/store/en-US/product'):
+                                links.append(link)
+                    root.execute_script("arguments[0].click()", random.choice(links))
+                    sleep(10)
+                    root.back()
+                    seconds -= int(time() - start)
+                    # print(f"{login}: {seconds} seconds left to exit")
+                    if os.getenv('EXIT'):
+                        print(f"{login}: exiting")
+                        break
+            except:
+                traceback.print_exc()
 
         # save cookies
         if save_cookies:

@@ -121,7 +121,8 @@ def epic_games_login(user):
             try:
                 root.get('https://www.epicgames.com/store/en-US/')
                 seconds = int(time_to_keep_alive)
-                print(f"{login}: looping links for {seconds} seconds")
+                seconds_sleep = seconds//10
+                print(f"{login}: keeping alive for {seconds} seconds")
                 while seconds > 0:
                     start = time()
                     links = []
@@ -130,7 +131,7 @@ def epic_games_login(user):
                             if href.startswith('https://www.epicgames.com/store/en-US/product'):
                                 links.append(link)
                     root.execute_script("arguments[0].click()", random.choice(links))
-                    sleep(10)
+                    sleep(seconds_sleep)
                     root.back()
                     seconds -= int(time() - start)
                     # print(f"{login}: {seconds} seconds left to exit")

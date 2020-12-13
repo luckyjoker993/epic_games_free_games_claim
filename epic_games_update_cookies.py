@@ -138,6 +138,12 @@ def epic_games_login(user):
                     if os.getenv('EXIT'):
                         print(f"{login}: exiting")
                         break
+                root.get('https://www.epicgames.com/id/login')
+                sleep(4)
+                if root.current_url != 'https://www.epicgames.com/id/login':
+                    print(f'{login}: still logged in after {seconds} seconds session')
+                else:
+                    print(f'{login}: need to login after {seconds} seconds session')
             except:
                 traceback.print_exc()
 

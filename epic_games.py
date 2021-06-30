@@ -16,12 +16,13 @@ from selenium.webdriver.common.by import By
 from decorators import traceback_decorator
 
 try:
-    from epic_games_settings import number_of_browsers as workers, save_cookies, hide_browsers
+    from epic_games_settings import number_of_browsers as workers, save_cookies, hide_browsers, loop
 except Exception:
     print('No epic_games_setting.py file detected, continuing with default settings.')
     workers = 1
     save_cookies = 1
     hide_browsers = 0
+    loop = 0
 
 from download_upload import download, upload
 
@@ -84,16 +85,22 @@ def get_links():
         links = [];
         for (span of spans) {
             if(span.innerText.toLowerCase().includes('free now')){
+              try {
                 while(span.localName != 'a'){
-                    span = span.parentElement;
-                }
-                links.push(span.href);
+                  span = span.parentElement;
+              }
+              links.push(span.href);
+              }
+              catch(err) {
+                console.log("error") 
+              }                
             }
         };
         return links;
-        ''')), repeat(0))
+        ''')), repeat(0)) # catch errors
     root.close()
     print('Got links')
+    links = list(dict.fromkeys(links)) # delete duplicate links
     return links
 
 
@@ -156,7 +163,7 @@ def add_games(user, links):
         try:
             WebDriverWait(root, 15).until(EC.presence_of_element_located((By.ID, 'email'))).send_keys(login)
             root.find_element_by_id('password').send_keys(password)
-            WebDriverWait(root, 20).until(EC.element_to_be_clickable((By.CLASS_NAME, 'SubmitButton'))).click()
+            WebDriverWait(root, 20).until(EC.element_to_be_clickable((By.ID, 'sign-in'))).click() # click on the button with id="sign-in"
             if hide_browsers:
                 root.set_window_position(0, 0)
         except TimeoutException:
@@ -209,11 +216,14 @@ def add_games(user, links):
                         {get_buttons.push(button)}};
                 return get_buttons;
             """)
-
+        
+        title = root.title.split()
+        title = ' '.join(title[:title.index("|")]) # only show the name of the game
+        
         # close if not get buttons
         if not get_buttons:
-            if not repeating:
-                print(f'{login}: {root.title} already in library')
+            if not repeating: 
+                print(f'{login}: {title} | was already in your library')
             root.execute_script('window.close()')
             root.switch_to.window(root.window_handles[0])
             continue
@@ -228,9 +238,9 @@ def add_games(user, links):
         success = place_order(root, login)
         if success:
             if not repeating:
-                print(f'{login}: {root.title} added to library')
+                print(f'{login}: {title} | was added to your library')
             else:
-                print(f'{login}: {root.title} DLC added to library')
+                print(f'{login}: {title} | was DLC added to your library')
             root.execute_script('window.close()')
             root.switch_to.window(root.window_handles[0])
 
@@ -284,7 +294,10 @@ def main():
         with Threads(max_workers=workers) as executor:
             executor.map(add_games, users(), repeat(links))
 
-
 if __name__ == "__main__":
-    main()
-
+    if loop==1:
+        while True:
+            main()
+            sleep(60*60*24*6) # check every 6 days to claim free games
+    else:
+        main()

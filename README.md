@@ -7,6 +7,8 @@ put at root login.txt and cookies file in format "your_email@host.com.json"
   
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
+* [Recommend] to run the script (up to date) and not the .exe (outdated)
+
 # With cookies [recommended]
 - [x] tested on windows 10 pc with chrome
 1. Download your epic games cookies with [this extension](https://chrome.google.com/webstore/detail/nmckokihipjgplolmcmjakknndddifde)
@@ -21,7 +23,5 @@ put at root login.txt and cookies file in format "your_email@host.com.json"
 2. if you have more than one account you can change number of browsers in settings.py
 3. for script to run you need to download chromedriver.exe from https://chromedriver.chromium.org/downloads
 4. or you can just run the .exe file which has chromedriver built in.
-
-* recommend to run the script (up to date) and not the .exe (outdated)
 
 # donations: https://donate.stream/ya410012969446716
